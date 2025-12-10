@@ -1,0 +1,277 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calculadora de Daño de Espada</title>
+<style>
+  :root {
+    --bg1: #0f172a; /* slate-900 */
+    --bg2: #1e293b; /* slate-800 */
+    --accent: #7c3aed; /* violet-600 */
+    --accent-2: #22d3ee; /* cyan-400 */
+    --text: #e2e8f0; /* slate-200 */
+    --muted: #94a3b8; /* slate-400 */
+    --card: rgba(30,41,59,0.75);
+    --border: rgba(226,232,240,0.15);
+    --good: #10b981; /* emerald */
+    --warn: #f59e0b; /* amber */
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    color: var(--text);
+    background: radial-gradient(1200px 600px at 15% 20%, #111827 30%, var(--bg1) 60%),
+                radial-gradient(800px 500px at 85% 20%, #0b1324 30%, var(--bg2) 60%);
+    min-height: 100vh;
+  }
+  header { padding: 32px 20px 12px; text-align: center; }
+  h1 { font-size: 28px; margin: 0 0 6px 0; letter-spacing: 0.3px; }
+  .subtitle { color: var(--muted); font-size: 14px; }
+  .container { max-width: 980px; margin: 24px auto 40px; padding: 0 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+    overflow: hidden;
+  }
+  .card-header { padding: 16px 20px; background: linear-gradient(90deg, rgba(124,58,237,0.12), rgba(34,211,238,0.12)); border-bottom: 1px solid var(--border); }
+  .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; padding: 20px; }
+  .col-6 { grid-column: span 6; }
+  .col-4 { grid-column: span 4; }
+  .col-3 { grid-column: span 3; }
+  .col-12 { grid-column: span 12; }
+  @media (max-width: 800px) { .col-6, .col-4, .col-3 { grid-column: span 12; } }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  input, select, button, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(2,6,23,0.35);
+    color: var(--text);
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: rgba(124,58,237,0.5); box-shadow: 0 0 0 3px rgba(124,58,237,0.15); }
+  .row { display: flex; gap: 12px; }
+  .btn { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: white; font-weight: 600; cursor: pointer; transition: transform .08s ease; }
+  .btn:active { transform: scale(0.98); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-preset { padding: 8px 10px; border-radius: 999px; border: 1px solid var(--border); background: rgba(2,6,23,0.35); color: var(--text); cursor: pointer; }
+  .btn-preset.active { border-color: rgba(124,58,237,0.7); box-shadow: 0 0 0 3px rgba(124,58,237,0.15); }
+  .pill { display: inline-block; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+  .result { padding: 16px 20px; border-top: 1px solid var(--border); background: linear-gradient(180deg, rgba(124,58,237,0.06), rgba(34,211,238,0.06)); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+  .small { font-size: 12px; color: var(--muted); }
+  .tag { display:inline-block; padding: 4px 8px; border-radius: 999px; font-size: 11px; margin-right:6px; }
+  .tag.good { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3);} 
+  .tag.warn { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3);} 
+</style>
+</head>
+<body>
+  <header>
+    <h1>Calculadora de Daño de Espada</h1>
+    <div class="subtitle">Escalado por nivel + incrementos extremos (cuatrillón, quintillón, sextillón — <strong>escala corta</strong>)</div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <div class="row" style="align-items:center; justify-content:space-between;">
+          <div>
+            <span class="pill">Versión 1.1</span>
+            <span class="pill">Modo científico</span>
+          </div>
+          <div class="small">Usa notación científica: mantisa × 10^exponente</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="col-6">
+          <h3>Daño inicial</h3>
+          <label>Mantisa (1 ≤ m &lt; 10)</label>
+          <input id="mantisa_inicial" type="number" min="1" max="10" step="0.001" value="2.067">
+          <label>Exponente</label>
+          <input id="expo_inicial" type="number" step="1" value="113">
+        </div>
+        <div class="col-6">
+          <h3>Niveles</h3>
+          <div class="row">
+            <div style="flex:1">
+              <label>Inicio</label>
+              <input id="nivel_inicio" type="number" step="0.01" value="1312">
+            </div>
+            <div style="flex:1">
+              <label>Fin</label>
+              <input id="nivel_fin" type="number" step="0.01" value="2050">
+            </div>
+          </div>
+          <label>Tasa por nivel (%)</label>
+          <input id="tasa_nivel" type="number" step="0.001" value="8.52">
+          <div class="small">Ejemplos: 7.467 (tramo real 736→1210.9), 8.52 (media alta), 10, 12.2 (global)</div>
+          <div style="margin-top:8px">
+            <div class="row" style="flex-wrap:wrap; gap:8px;">
+              <button class="btn-preset" data-rate="7.467">7.467 %</button>
+              <button class="btn-preset" data-rate="8.52">8.52 %</button>
+              <button class="btn-preset" data-rate="10">10 %</button>
+              <button class="btn-preset" data-rate="12.2">12.2 %</button>
+            </div>
+            <div class="small" style="margin-top:6px">Pulsa un preajuste para fijar la tasa y recalcular automáticamente.</div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <h3>Incrementos extremos</h3>
+          <div class="row">
+            <div style="flex:1">
+              <label>Porcentajes adicionales (separados por coma)</label>
+              <input id="porcentajes_lista" type="text" placeholder="Ej.: 500 quatrillón, 10 quintillones, 1 sextillón">
+            </div>
+            <div style="flex:0 0 160px; align-self:flex-end;">
+              <button id="btn_aplicar" class="btn">Calcular</button>
+            </div>
+          </div>
+          <div class="small">Formato admitido:
+            <ul>
+              <li><span class="mono">X %</span> (porcentaje normal)</li>
+              <li><span class="mono">X quatrillón</span> ⇒ <span class="mono">X × 10^15 %</span></li>
+              <li><span class="mono">X quintillones</span> ⇒ <span class="mono">X × 10^18 %</span></li>
+              <li><span class="mono">X sextillón</span> ⇒ <span class="mono">X × 10^21 %</span></li>
+            </ul>
+            Nota: usamos <strong>escala corta</strong> (10^15, 10^18, 10^21) para coincidir con tus datos.
+          </div>
+        </div>
+
+        <div class="col-12">
+          <h3>Resultado</h3>
+          <div class="row">
+            <div style="flex:1">
+              <div id="salida_proyeccion" class="mono"></div>
+              <div id="salida_incrementos" class="mono" style="margin-top:8px"></div>
+            </div>
+            <div style="flex:0 0 160px;">
+              <button id="btn_copiar" class="btn-outline">Copiar resultado</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <span class="tag good">Multiplicación precisa m×10^e</span>
+            <span class="tag warn">Para porcentajes ≥ 10^6 %, se ignora el +1 por ser despreciable</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="result">
+        <div class="small">Consejo: si quieres fijar anclajes (p.ej., nivel 736 y 1210.9), usa la tasa del tramo que los reproduce (≈7.467%).</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ===================== Utilidades de notación científica =====================
+function normalize(ne) {
+  let m = ne.m, e = ne.e;
+  if (m === 0) return {m: 0, e: 0};
+  const exp10 = Math.floor(Math.log10(Math.abs(m)));
+  m = m / Math.pow(10, exp10);
+  e = e + exp10;
+  if (m >= 10) { m /= 10; e += 1; }
+  if (m < 1) { m *= 10; e -= 1; }
+  return {m, e};
+}
+function mult(a, b) { return normalize({m: a.m * b.m, e: a.e + b.e}); }
+function fromNumber(x) {
+  if (!isFinite(x) || x === 0) return {m: 0, e: 0};
+  const e = Math.floor(Math.log10(Math.abs(x)));
+  const m = x / Math.pow(10, e);
+  return normalize({m, e});
+}
+function toString(ne, digits=3) { if (ne.m === 0) return "0"; return `${ne.m.toFixed(digits)} × 10^${ne.e}`; }
+function powFactor(ne, r, n) {
+  const total = n * Math.log10(r);
+  const eAdd = Math.floor(total);
+  const mMult = Math.pow(10, total - eAdd);
+  return normalize({m: ne.m * mMult, e: ne.e + eAdd});
+}
+function factorFromPercent(pct) {
+  const absPct = Math.abs(pct);
+  if (absPct >= 1e6) { return fromNumber(absPct / 100); } else { return fromNumber(1 + (pct / 100)); }
+}
+
+// ===================== Parseo de porcentajes extremos =====================
+function parseExtremePercentToken(token) {
+  const t = token.trim().toLowerCase();
+  if (!t) return null;
+  const m1 = t.match(/^([+-]?\d+(?:[\.,]\d+)?)\s*%$/);
+  if (m1) { const val = parseFloat(m1[1].replace(',', '.')); return val; }
+  const m2 = t.match(/^([+-]?\d+(?:[\.,]\d+)?)\s*(?:cuatrillon|cuatrillón|quatrillon|quatrillón)s?$/);
+  if (m2) { const val = parseFloat(m2[1].replace(',', '.')); return val * 1e15; }
+  const m3 = t.match(/^([+-]?\d+(?:[\.,]\d+)?)\s*(?:quintillon|quintillón|quintillones)s?$/);
+  if (m3) { const val = parseFloat(m3[1].replace(',', '.')); return val * 1e18; }
+  const m4 = t.match(/^([+-]?\d+(?:[\.,]\d+)?)\s*(?:sextillon|sextillón|sextillones)s?$/);
+  if (m4) { const val = parseFloat(m4[1].replace(',', '.')); return val * 1e21; }
+  return null;
+}
+function parseExtremePercentList(text) { if (!text) return []; return text.split(',').map(t => parseExtremePercentToken(t)).filter(v => v !== null); }
+
+// ===================== Lógica principal =====================
+function calcular() {
+  const m0 = parseFloat(document.getElementById('mantisa_inicial').value);
+  const e0 = parseInt(document.getElementById('expo_inicial').value, 10);
+  const L0 = parseFloat(document.getElementById('nivel_inicio').value);
+  const L1 = parseFloat(document.getElementById('nivel_fin').value);
+  const gPct = parseFloat(document.getElementById('tasa_nivel').value);
+  const tokens = document.getElementById('porcentajes_lista').value;
+  if (!isFinite(m0) || !isFinite(e0) || !isFinite(L0) || !isFinite(L1) || !isFinite(gPct) || m0 <= 0) {
+    alert('Revisa los valores: mantisa>0, exponente, niveles y tasa deben ser válidos.');
+    return;
+  }
+  const nLevels = L1 - L0;
+  const r = 1 + (gPct/100);
+  let D = normalize({m: m0, e: e0});
+  D = powFactor(D, r, nLevels);
+  document.getElementById('salida_proyeccion').innerHTML = `<strong>Proyección (solo niveles):</strong> ${toString(D)}`;
+  const porcentajes = parseExtremePercentList(tokens);
+  let Dinc = {m: D.m, e: D.e};
+  let applied = [];
+  for (const pct of porcentajes) { const factor = factorFromPercent(pct); Dinc = mult(Dinc, factor); applied.push(pct); }
+  const salidaIncr = document.getElementById('salida_incrementos');
+  if (applied.length === 0) {
+    salidaIncr.innerHTML = `<strong>Con incrementos:</strong> (ninguno) → ${toString(Dinc)}`;
+  } else {
+    const pretty = applied.map(p => { if (Math.abs(p) >= 1e12) { const ne = fromNumber(p); return `${ne.m.toFixed(3)} × 10^${ne.e} %`; } else { return `${p.toLocaleString('es-ES')} %`; } }).join(' + ');
+    salidaIncr.innerHTML = `<strong>Con incrementos:</strong> ${pretty} → ${toString(Dinc)}`;
+  }
+}
+function copiarResultado() {
+  const proy = document.getElementById('salida_proyeccion').innerText;
+  const inc = document.getElementById('salida_incrementos').innerText;
+  const texto = proy + "\n" + inc;
+  navigator.clipboard.writeText(texto).then(() => { alert('Resultado copiado al portapapeles'); });
+}
+
+// Eventos
+function marcarPreset(btn) {
+  document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function onClickPreset(e) {
+  const rate = parseFloat(e.currentTarget.dataset.rate);
+  document.getElementById('tasa_nivel').value = rate;
+  marcarPreset(e.currentTarget);
+  calcular();
+}
+
+document.getElementById('btn_aplicar').addEventListener('click', calcular);
+
+document.getElementById('btn_copiar').addEventListener('click', copiarResultado);
+
+document.querySelectorAll('.btn-preset').forEach(btn => btn.addEventListener('click', onClickPreset));
+
+// Calcular por defecto con los valores iniciales
+calcular();
+</script>
+</body>
+</html>
